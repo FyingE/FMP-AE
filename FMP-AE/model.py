@@ -5,6 +5,8 @@ import pandas as pd
 import torch
 import torch.nn as nn
 import matplotlib.pyplot as plt
+
+import torch.nn.functional as F
 from sklearn.metrics import roc_curve, auc, precision_recall_curve
 # 定义联合损失函数
 
@@ -17,6 +19,44 @@ def combined_loss_function(reconstructed, original, matrix_profile, lambda_m=0.3
     return reconstruction_loss + lambda_m * matrix_profile_loss
 
 
+def inter_window_mp_loss(features):
+    """
+    features: shape (N, D) - N个窗口的特征表示
+    返回：平均的 inter-window MP loss
+    """
+    # 计算所有样本间的 pairwise cosine 相似度
+    sim_matrix = F.cosine_similarity(features.unsqueeze(1), features.unsqueeze(0), dim=2)
+    
+    # 避免与自身比对，将对角线元素设为最大值（1），以便后续取最小
+    sim_matrix.fill_diagonal_(1.0)
+    
+    # 对每个样本，取与其他样本的最小相似度（即最不像的样本）
+    min_sim = torch.min(sim_matrix, dim=1)[0]
+
+    # 损失越小越好，因此希望最小相似度越低
+    return torch.mean(min_sim)
+
+def intra_window_mp_loss(intra_features):
+    """
+    intra_features: shape (N, m, D) - N个窗口，每个窗口有m个子段特征
+    返回：平均的 intra-window MP loss（即平均的1 - cosine相似度）
+    """
+    N, m, D = intra_features.shape
+    loss_sum = 0.0
+    count = 0
+
+    for i in range(N):
+        # 每个窗口内的 m 个子段特征
+        segments = intra_features[i]  # shape (m, D)
+        for p in range(m):
+            for q in range(p + 1, m):
+                # 计算 dissimilarity: 1 - cosine similarity
+                sim = F.cosine_similarity(segments[p], segments[q], dim=0)
+                dissim = 1 - sim
+                loss_sum += dissim
+                count += 1
+
+    return loss_sum / (count + 1e-8)
 
 class TimeSeriesCNN(nn.Module):
     def __init__(self, window_size):
