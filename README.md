@@ -17,22 +17,24 @@ This repository implements a novel approach to TSAD, called **FMP-TAE** (Feature
 4. **Extensive Evaluation**: We perform extensive experiments on five benchmark datasets, demonstrating superior performance in multiple evaluation metrics (Precision, Recall, F1-score, AUC-PR, AUC-ROC), validated through ablation studies to prove the effectiveness of each component.
 
 
-## Key Features
+## 🔑 Key Features
 
-- **Hybrid Model**: Combines Matrix Profile techniques with deep learning (1D-CNN and Autoencoder) for enhanced anomaly detection.
-- **Sliding Window Technique**: Improves sensitivity to sparse anomalies by processing smaller subsequences.
-- **Matrix Profile Loss**: A novel loss function that integrates Matrix Profile loss with the Autoencoder's reconstruction loss, improving anomaly detection accuracy.
-- **Efficient and Scalable**: Optimized for large-scale time series data, improving both computational efficiency and model generalization across domains.
+- **Dual Loss Function**: Incorporates reconstruction loss, external matrix profile loss, and internal matrix profile loss for comprehensive training.
+- **State-of-the-Art Architecture**: Utilizes CNNs for feature extraction and attention-based autoencoders for reconstruction, providing an optimal combination for time series anomaly detection.
+- **Flexible Model**: Designed to be adaptable to various time series datasets and capable of identifying both subtle and more obvious anomalies.
+- **Point Adjustment for Anomaly Sequences**: Enhances performance by adjusting detected anomalies over time to reduce false positives.
 
-## Model Architecture
+## 🏗️ Model Architecture
 
-The **FMP-TAE** architecture consists of three main components:
+The architecture of FMP-TAE consists of three main components:
 
-1. **Multi-channel CNN for Feature Extraction**: This component extracts the temporal features from the time series data. The CNN is designed to accelerate the computation of the Matrix Profile (MP) by enabling parallel processing, which greatly improves computational efficiency.
+1. **CNN Encoder**: Extracts local temporal features from the time series data, learning hierarchical representations.
+2. **Attention-Based Autoencoder**: Reconstructs the input data using an attention mechanism, capturing long-range dependencies.
+3. **Loss Functions**:
+    - **Reconstruction Loss**: Measures how accurately the model can reconstruct the original input.
+    - **External Matrix Profile Loss**: Encourages similarity between windowed segments of the time series at different positions.
+    - **Internal Matrix Profile Loss**: Ensures consistency within each window, preventing overfitting to local noise.
 
-2. **Loss Function Module**: The model employs a sliding window technique to compute both inter-window and intra-window MP losses. These losses are then combined with the Autoencoder's reconstruction loss to guide anomaly detection in an unsupervised manner.
-
-3. **Transformer-based Autoencoder**: The Autoencoder architecture is based on a Transformer model, which helps capture long-range dependencies and fine-grained local patterns in the time series data, improving the ability to detect both local and global anomalies.
 
 
 ## Key Parameters
